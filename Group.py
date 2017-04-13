@@ -66,12 +66,12 @@ class GroupThread(threading.Thread):
             producer.set_state(PyTango.DevState.MOVING)
             producer.push_change_event("state", PyTango.DevState.MOVING)
         for _ in xrange(no_chunks):
+            time.sleep(sleep_time)
             if self.dev._stop_flag:
                 break
             new_index = index + points_per_chunk
             self.strategy(range(index, new_index), data)
             index = new_index
-            time.sleep(sleep_time)
         for producer in producers:
             producer.set_state(PyTango.DevState.ON)
             producer.push_change_event("state", PyTango.DevState.ON)
