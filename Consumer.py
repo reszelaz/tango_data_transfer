@@ -93,6 +93,9 @@ class ConsumerClass(PyTango.DeviceClass):
                   'data_time_avg' : [ [ PyTango.ArgType.DevDouble ,
                                     PyTango.AttrDataFormat.SCALAR ,
                                     PyTango.AttrWriteType.READ] ],
+                  'data_time_sum' : [ [ PyTango.ArgType.DevDouble ,
+                                    PyTango.AttrDataFormat.SCALAR ,
+                                    PyTango.AttrWriteType.READ] ],
                   'strategy' : [ [ PyTango.ArgType.DevString ,
                                     PyTango.AttrDataFormat.SCALAR ,
                                     PyTango.AttrWriteType.READ_WRITE] ],
@@ -221,6 +224,16 @@ class Consumer(PyTango.Device_4Impl):
 
     @PyTango.DebugIt()
     def is_data_time_avg_allowed(self, req_type):
+        return self.get_state() in (PyTango.DevState.ON,)
+    
+    @PyTango.DebugIt()
+    def read_data_time_sum(self, the_att):
+        self.info_stream("read_data_time_sum")
+        value = numpy.sum(self.data_times)
+        the_att.set_value(value)
+
+    @PyTango.DebugIt()
+    def is_data_time_sum_allowed(self, req_type):
         return self.get_state() in (PyTango.DevState.ON,)
 
     @PyTango.DebugIt()
