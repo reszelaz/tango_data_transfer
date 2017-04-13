@@ -33,7 +33,7 @@ class ConsumerThread(threading.Thread):
 
         data_ids = []
         for producer in producers:
-            id_ = producer.subscribe_event("Data",
+            id_ = producer.subscribe_event("data",
                                      PyTango.EventType.CHANGE_EVENT,
                                      self.dev)
             data_ids.append(id_)
@@ -58,13 +58,20 @@ class ConsumerThread(threading.Thread):
                 break
             for producer in producers:
                 t1 = time.time()
-                value = producer.read_attribute("Data").value
-                print value
-                _ = codec_obj.decode(('json', value), ensure_ascii=True)
-                print _
+                value = producer.read_attribute("data").value
+                value = codec_obj.decode(('json', value), ensure_ascii=True)
                 t2 = time.time()
+                if len(value[1]["index"]):
+                    data_times.append(t2 - t1)
+                    print value
+        for producer in producers:
+            t1 = time.time()
+            value = producer.read_attribute("data").value
+            value = codec_obj.decode(('json', value), ensure_ascii=True)
+            t2 = time.time()
+            if len(value[1]["index"]):
                 data_times.append(t2 - t1)
-
+                print value
     def pipe(self):
         group = self.dev.group
         producers = self.dev.producers
