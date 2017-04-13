@@ -86,5 +86,5 @@ class Producer(PyTango.Device_5Impl):
 
     def append_data(self, index, data):
         with self.lock:
-            self.index.append(index)
-            self.data.append(data)
+            self.index.extend(index)
+            self.data.extend(data)
