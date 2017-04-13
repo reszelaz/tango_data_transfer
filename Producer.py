@@ -2,7 +2,7 @@ import sys
 import time
 import copy
 import threading
-
+import numpy
 import PyTango
 
 class ProducerClass(PyTango.DeviceClass):
@@ -11,17 +11,20 @@ class ProducerClass(PyTango.DeviceClass):
                                     PyTango.AttrDataFormat.SCALAR ,
                                     PyTango.AttrWriteType.READ] ],
     }
+    
+    pipe_list = {'data_pipe' : [ PyTango.PipeWriteType.PIPE_READ ]
+    }
 
     def __init__(self, name):
         PyTango.DeviceClass.__init__(self, name)
         self.set_type("TestDevice")
 
 
-class Producer(PyTango.Device_4Impl):
+class Producer(PyTango.Device_5Impl):
 
     #@PyTango.DebugIt()
     def __init__(self,cl,name):
-        PyTango.Device_4Impl.__init__(self, cl, name)
+        PyTango.Device_5Impl.__init__(self, cl, name)
         self.info_stream('In Producer.__init__')
         Producer.init_device(self)
 
@@ -63,6 +66,22 @@ class Producer(PyTango.Device_4Impl):
 
     @PyTango.DebugIt()
     def is_data_allowed(self, req_type):
+        return True #self.get_state() in (PyTango.DevState.ON,)
+    
+    @PyTango.DebugIt()
+    def read_data_pipe(self, pipe):
+        with self.lock:
+            index = copy.copy(self.index)
+            data = copy.copy(self.data)
+            self.data, self.index = [], []
+        print index, data
+        chunk = {}
+        for i, d in zip(index, data):
+            chunk[str(i)] = d
+        pipe.set_value(('name', chunk))
+    
+    @PyTango.DebugIt()
+    def is_data_pipe_allowed(self, req_type):
         return True #self.get_state() in (PyTango.DevState.ON,)
 
     def append_data(self, index, data):

@@ -26,6 +26,10 @@ class GroupThread(threading.Thread):
             self.strategy = types.MethodType(GroupThread.read,
                                              self,
                                              GroupThread)
+        if strategy == "pipe":
+            self.strategy = types.MethodType(GroupThread.read,
+                                             self,
+                                             GroupThread)
 
     def strategy(self):
         raise Exception("strategy is not known")
@@ -41,7 +45,15 @@ class GroupThread(threading.Thread):
             producer.append_data(index, data)
 
     def pipe(self, index, data):
-        pass
+        # PyTango 9 does not support pipe events yet. 
+        # For the moment just use the same strategy as read.
+        # The consumer will read the pipe.
+        for producer in self.dev.producers:
+            producer.append_data(index, data)
+#         chunk = dict(index=index, data=data)
+#         pipe = ("chunk", chunk)
+#         for producer in self.dev.producers:
+#             producer.push_pipe_event("data_pipe", pipe)
 
     def run(self):
         producers = self.dev.producers
@@ -101,11 +113,11 @@ class GroupClass(PyTango.DeviceClass):
         self.set_type("TestDevice")
 
 
-class Group(PyTango.Device_4Impl):
+class Group(PyTango.Device_5Impl):
 
     #@PyTango.DebugIt()
     def __init__(self,cl,name):
-        PyTango.Device_4Impl.__init__(self, cl, name)
+        PyTango.Device_5Impl.__init__(self, cl, name)
         self.info_stream('In Group.__init__')
         self.codec = "json"
         self.codec_obj = CodecFactory().getCodec(self.codec)

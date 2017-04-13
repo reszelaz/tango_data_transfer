@@ -18,6 +18,9 @@ class ConsumerThread(threading.Thread):
         elif strategy == "read":
             self.strategy = types.MethodType(ConsumerThread.read,
                                              self, ConsumerThread)
+        elif strategy == "pipe":
+            self.strategy = types.MethodType(ConsumerThread.pipe,
+                                             self, ConsumerThread)
 
     def strategy(self):
         raise Exception("strategy is not known")
@@ -63,7 +66,38 @@ class ConsumerThread(threading.Thread):
                 data_times.append(t2 - t1)
 
     def pipe(self):
-        pass
+        group = self.dev.group
+        producers = self.dev.producers
+        _stop_flag = self.dev._stop_flag
+        state_event = self.dev.state_event
+        data_times = self.dev.data_times
+        group.Start()
+        while True:
+            if _stop_flag or state_event.wait(0.01):
+                break
+            for producer in producers:
+                try:
+                    t1 = time.time()
+                    name, data = producer.read_pipe("data_pipe")
+                except PyTango.DevFailed, e:
+                    if e[0].reason == "API_PipeValueNotSet":
+                        pass
+                else:
+                    print name, data
+                    t2 = time.time()
+                    data_times.append(t2 - t1)
+        # Read the final one
+        for producer in producers:
+            try:
+                t1 = time.time()
+                name, data = producer.read_pipe("data_pipe")
+            except PyTango.DevFailed, e:
+                if e[0].reason == "API_PipeValueNotSet":
+                    pass
+            else:
+                print name, data
+                t2 = time.time()
+                data_times.append(t2 - t1)
 
     def run(self):
         group = self.dev.group
@@ -106,11 +140,11 @@ class ConsumerClass(PyTango.DeviceClass):
         self.set_type("TestDevice")
 
 
-class Consumer(PyTango.Device_4Impl):
+class Consumer(PyTango.Device_5Impl):
 
     #@PyTango.DebugIt()
     def __init__(self,cl,name):
-        PyTango.Device_4Impl.__init__(self, cl, name)
+        PyTango.Device_5Impl.__init__(self, cl, name)
         self.info_stream('In Consumer.__init__')
         self.codec = "json"
         self.codec_obj = CodecFactory().getCodec(self.codec)
