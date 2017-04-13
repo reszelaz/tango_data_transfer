@@ -45,5 +45,6 @@ for _ in xrange(repeat):
         if state_event.wait(0.01):
             break
     consumer.unsubscribe_event(id_)
-    if STRATEGY == "event":
+    if strategy == "event":
         assert consumer.read_attribute("event_order_ok").value == True
+    print "data_time_sum ", consumer.read_attribute("data_time_sum").value
