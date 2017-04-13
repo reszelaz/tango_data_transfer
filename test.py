@@ -1,11 +1,9 @@
+import sys
 import threading
 import PyTango
 
 GROUP = "test/group/1"
 CONSUMER = "test/consumer/1"
-
-STRATEGY = "read"
-REPEAT = 1
 
 state = PyTango.DevState.ON
 
@@ -20,12 +18,23 @@ def push_event(event):
         state_event.set()
     state = value
 
+try:
+    strategy = sys.argv[1]
+except IndexError:
+    strategy = "read"
+else:
+    try:
+        repeat = int(sys.argv[2])
+    except IndexError:
+        repeat = 1
+        
 group = PyTango.DeviceProxy(GROUP)
 consumer = PyTango.DeviceProxy(CONSUMER)
 
-group.write_attribute("strategy", STRATEGY)
-consumer.write_attribute("strategy", STRATEGY)
-for _ in xrange(REPEAT):
+group.write_attribute("strategy", strategy)
+consumer.write_attribute("strategy", strategy)
+
+for _ in xrange(repeat):
     id_ = consumer.subscribe_event("state",
                                    PyTango.EventType.CHANGE_EVENT,
                                    push_event)
