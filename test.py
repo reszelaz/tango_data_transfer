@@ -22,10 +22,11 @@ class Test(object):
             self.state_event.set()
         self.state = value
         
-    def run(self, strategy, repeat):        
+    def run(self, strategy, repeat, no_chunks):
         group = PyTango.DeviceProxy(GROUP)
         consumer = PyTango.DeviceProxy(CONSUMER)
 
+        group.write_attribute("no_chunks", no_chunks)
         group.write_attribute("strategy", strategy)
         consumer.write_attribute("strategy", strategy)
         
@@ -42,15 +43,17 @@ class Test(object):
             consumer.unsubscribe_event(id_)
             if strategy == "event":
                 assert consumer.read_attribute("event_order_ok").value == True
-            print "data_time_sum ", consumer.read_attribute("data_time_sum").value
+            print consumer.read_attribute("data_time_sum").value
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("strategy", type=str)
     parser.add_argument("-r", "--repeat", type=int, default=1)
+    parser.add_argument("-c", "--no_chunks", type=int, default=1)
     args = parser.parse_args()
     strategy = args.strategy
     repeat = args.repeat
+    no_chunks = args.no_chunks
     
     test = Test()
-    test.run(strategy, repeat) 
+    test.run(strategy, repeat, no_chunks) 
