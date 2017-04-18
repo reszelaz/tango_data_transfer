@@ -61,7 +61,7 @@ class ConsumerThread(threading.Thread):
                 value = producer.read_attribute("data").value
                 value = codec_obj.decode(('json', value), ensure_ascii=True)
                 t2 = time.time()
-                if len(value[1]["index"]):
+                if len(value[1].keys()):
                     data_times.append(t2 - t1)
                     print value
         for producer in producers:
@@ -69,7 +69,7 @@ class ConsumerThread(threading.Thread):
             value = producer.read_attribute("data").value
             value = codec_obj.decode(('json', value), ensure_ascii=True)
             t2 = time.time()
-            if len(value[1]["index"]):
+            if len(value[1].keys()):
                 data_times.append(t2 - t1)
                 print value
     def pipe(self):
@@ -86,25 +86,23 @@ class ConsumerThread(threading.Thread):
                 try:
                     t1 = time.time()
                     name, data = producer.read_pipe("data_pipe")
+                    t2 = time.time()
+                    data_times.append(t2 - t1)
+                    print name, data
                 except PyTango.DevFailed, e:
                     if e[0].reason == "API_PipeValueNotSet":
                         pass
-                else:
-                    print name, data
-                    t2 = time.time()
-                    data_times.append(t2 - t1)
         # Read the final one
         for producer in producers:
             try:
                 t1 = time.time()
                 name, data = producer.read_pipe("data_pipe")
+                t2 = time.time()
+                data_times.append(t2 - t1)
+                print name, data
             except PyTango.DevFailed, e:
                 if e[0].reason == "API_PipeValueNotSet":
                     pass
-            else:
-                print name, data
-                t2 = time.time()
-                data_times.append(t2 - t1)
 
     def run(self):
         group = self.dev.group

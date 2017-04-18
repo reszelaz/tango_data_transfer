@@ -60,7 +60,9 @@ class Producer(PyTango.Device_5Impl):
             index = copy.copy(self.index)
             data = copy.copy(self.data)
             self.data, self.index = [], []
-        chunk = dict(index=index, data=data)
+        chunk = {}
+        for i, d in zip(index, data):
+            chunk[str(i)] = d
         _, chunk_encoded = self.group.codec_obj.encode(("", chunk))
         attr.set_value(chunk_encoded)
 
