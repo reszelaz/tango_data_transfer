@@ -232,9 +232,7 @@ class Consumer(PyTango.Device_5Impl):
     def read_event_order_ok(self, the_att):
         self.info_stream("read_event_order_ok")
         value = False
-        len_producers = len(self.producers)
-        if (self.data_order == len_producers + len_producers and
-            self.state_order == (len_producers + len_producers + 1)):
+        if (self.state_order - 1) == self.data_order:
             value = True
         the_att.set_value(value)
 
