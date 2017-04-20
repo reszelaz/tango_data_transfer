@@ -7,7 +7,7 @@ import PyTango
 
 class ProducerClass(PyTango.DeviceClass):
 
-    attr_list = {'data' : [ [ PyTango.ArgType.DevString ,
+    attr_list = {'data' : [ [ PyTango.ArgType.DevEncoded ,
                                     PyTango.AttrDataFormat.SCALAR ,
                                     PyTango.AttrWriteType.READ] ],
     }
@@ -54,7 +54,10 @@ class Producer(PyTango.Device_5Impl):
     def read_attr_hardware(self, data):
         self.info_stream('In read_attr_hardware')
 
-    @PyTango.DebugIt()
+# IMPORTANT: seems like there is a bug in PyTango (at lest version 9)
+# that introduces garbage in the data event value aparft from the second event
+# This happens only when we use the DebugIt decorator
+#     @PyTango.DebugIt()
     def read_data(self, attr):
         with self.lock:
             index = copy.copy(self.index)
@@ -63,8 +66,8 @@ class Producer(PyTango.Device_5Impl):
         chunk = {}
         for i, d in zip(index, data):
             chunk[str(i)] = d
-        _, chunk_encoded = self.group.codec_obj.encode(("", chunk))
-        attr.set_value(chunk_encoded)
+        format, chunk_encoded = self.group.codec_obj.encode(("", chunk))
+        attr.set_value(format, chunk_encoded)
 
     @PyTango.DebugIt()
     def is_data_allowed(self, req_type):

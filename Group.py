@@ -35,10 +35,12 @@ class GroupThread(threading.Thread):
         raise Exception("strategy is not known")
 
     def event(self, index, data):
-        chunk = dict(index=index, data=data)
-        _, chunk_encoded = self.codec_obj.encode(("", chunk))
+        chunk = {}
+        for i, d in zip(index, data):
+            chunk[str(i)] = d
+        format_, chunk_encoded = self.codec_obj.encode(("", chunk))
         for producer in self.dev.producers:
-            producer.push_change_event("data", chunk_encoded)
+            producer.push_change_event("data", format_, chunk_encoded)
 
     def read(self, index, data):
         for producer in self.dev.producers:

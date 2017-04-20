@@ -58,16 +58,16 @@ class ConsumerThread(threading.Thread):
                 break
             for producer in producers:
                 t1 = time.time()
-                value = producer.read_attribute("data").value
-                value = codec_obj.decode(('json', value), ensure_ascii=True)
+                format, value = producer.read_attribute("data").value
+                value = codec_obj.decode((format, value), ensure_ascii=True)
                 t2 = time.time()
                 if len(value[1].keys()):
                     data_times.append(t2 - t1)
                     print value
         for producer in producers:
             t1 = time.time()
-            value = producer.read_attribute("data").value
-            value = codec_obj.decode(('json', value), ensure_ascii=True)
+            format, value = producer.read_attribute("data").value
+            value = codec_obj.decode((format, value), ensure_ascii=True)
             t2 = time.time()
             if len(value[1].keys()):
                 data_times.append(t2 - t1)
@@ -288,14 +288,15 @@ class Consumer(PyTango.Device_5Impl):
         return self.get_state() in (PyTango.DevState.ON,)
 
     def push_event(self, event):
-        t1 = time.time()
         if event.err:
             if event.errors[0].reason != "UnsupportedFeature":
                 print event.errors
             return
+        t1 = time.time()
         value = event.attr_value.value
         if event.attr_name.endswith("data"):
-            _ = self.codec_obj.decode(('json', value), ensure_ascii=True)
+            format_, value = value
+            _ = self.codec_obj.decode((format_, value), ensure_ascii=True)
             t2 = time.time()
             self.data_times.append(t2 - t1)
             self.data_order = self.index
